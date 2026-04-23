@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mapa Interactivo - Facultad de Informática UAQ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
+</head>
+<body>
+  <div class="app" id="app" style="width:100vw;height:100vh;overflow:hidden;">
+    <!-- Mapa Container (Leaflet) -->
+    <div id="mapContainer" style="width:100%;height:100%;"></div>
+    
+    <!-- UI Layer -->
+    <div class="ui-layer">
+      <!-- Search Bar -->
+      <div class="search-container">
+        <div class="search-box">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" class="search-input" id="searchInput" placeholder="Buscar punto de interés..." autocomplete="off">
+          <button class="search-clear" id="searchClear" aria-label="Limpiar búsqueda">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="search-dropdown" id="searchDropdown"></div>
+      </div>
+      
+      <!-- Floor Filters -->
+      <div class="floors-container" id="floorsContainer">
+        <button class="floor-chip active" data-floor="all">Todos</button>
+        <button class="floor-chip" data-floor="1">Piso 1</button>
+        <button class="floor-chip" data-floor="2">Piso 2</button>
+        <button class="floor-chip" data-floor="3">Piso 3</button>
+      </div>
+    </div>
+    
+    <!-- Categories Glossary -->
+    <div class="glossary" id="glossary">
+      <div class="glossary-indicator"></div>
+      <div class="glossary-header">
+        <span class="glossary-title">Categorías</span>
+        <button class="glossary-toggle" id="glossaryToggle" aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="glossary-content" id="glossaryContent">
+        <div class="category-item active" data-category="servicios">
+          <span class="category-dot servicios"></span>
+          <span class="category-label">Servicios</span>
+          <span class="category-count" data-count="servicios">0</span>
+        </div>
+        <div class="category-item active" data-category="academicos">
+          <span class="category-dot academicos"></span>
+          <span class="category-label">Académicos</span>
+          <span class="category-count" data-count="academicos">0</span>
+        </div>
+        <div class="category-item active" data-category="administrativos">
+          <span class="category-dot administrativos"></span>
+          <span class="category-label">Administrativos</span>
+          <span class="category-count" data-count="administrativos">0</span>
+        </div>
+        <div class="category-item active" data-category="comunes">
+          <span class="category-dot comunes"></span>
+          <span class="category-label">Áreas comunes</span>
+          <span class="category-count" data-count="comunes">0</span>
+        </div>
+        <div class="category-item active" data-category="otros">
+          <span class="category-dot otros"></span>
+          <span class="category-label">Otros</span>
+          <span class="category-count" data-count="otros">0</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Zoom Controls -->
+    <div class="zoom-controls">
+      <button class="zoom-btn" id="zoomIn" aria-label="Acercar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
+      <span class="zoom-level" id="zoomLevel">100%</span>
+      <button class="zoom-btn" id="zoomOut" aria-label="Alejar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- POI Popup -->
+    <div class="popup" id="popup">
+      <button class="popup-close" id="popupClose" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <span class="popup-arrow top"></span>
+      <div class="popup-header">
+        <div class="popup-icon" id="popupIcon">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="12" cy="12" r="10"/>
+          </svg>
+        </div>
+        <div>
+          <div class="popup-title" id="popupTitle">Nombre</div>
+          <div class="popup-floor">
+            <span class="popup-floor-badge" id="popupFloor">Piso 1</span>
+          </div>
+        </div>
+      </div>
+      <div class="popup-details" id="popupDetails">
+        Detalles del punto de interés aquí.
+      </div>
+    </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
