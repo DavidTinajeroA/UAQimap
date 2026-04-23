@@ -16,7 +16,7 @@
   };
 
   const CAMPUS_CENTER = [20.704466, -100.443938];
-  const ZOOM_LEVEL = 21;
+  const ZOOM_LEVEL = 18;
 
   const $ = (sel) => document.querySelector(sel);
 
@@ -66,6 +66,7 @@
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap',
       maxZoom: 23,
+      maxNativeZoom: 19,
       minZoom: 10
     }).addTo(state.map);
 
@@ -222,7 +223,7 @@
 
   function selectSearchResult(poi) {
     if (!poi) return;
-    state.map.setView([poi.coordenadas.lat, poi.coordenadas.lng], 21);
+    state.map.setView([poi.coordenadas.lat, poi.coordenadas.lng], 19);
     const marker = state.markerCache.get(poi.id);
     if (marker) marker.openPopup();
     clearSearch();
@@ -269,7 +270,7 @@
 
     state.map.on('zoomend moveend', () => {
       const zl = $('#zoomLevel');
-      if (zl) zl.textContent = `${Math.round(state.map.getZoom() * 100 / 21)}%`;
+      if (zl) zl.textContent = `${Math.round(state.map.getZoom() * 100 / 19)}%`;
     });
 
     document.addEventListener('keydown', e => { if (e.key === 'Escape') state.selectedPOI = null; });

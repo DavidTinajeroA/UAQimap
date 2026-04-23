@@ -35,9 +35,9 @@
   --font-mono: 'IBM Plex Mono', monospace;
   
   --z-map: 1;
-  --z-ui: 100;
-  --z-popup: 200;
-  --z-modal: 300;
+  --z-ui: 1000;
+  --z-popup: 2000;
+  --z-modal: 3000;
   
   --transition-fast: 150ms ease;
   --transition-normal: 250ms ease;
@@ -433,7 +433,7 @@ body {
    ============================================ */
 
 .glossary {
-  position: absolute;
+  position: fixed;
   top: var(--space-4);
   left: var(--space-4);
   background: rgba(255, 255, 255, 0.98);
@@ -446,6 +446,7 @@ body {
   max-width: 240px;
   pointer-events: auto;
   border: 1px solid rgba(0, 0, 0, 0.05);
+  z-index: var(--z-ui);
 }
 
 .glossary-header {
@@ -541,7 +542,7 @@ body {
    ============================================ */
 
 .zoom-controls {
-  position: absolute;
+  position: fixed;
   bottom: var(--space-5);
   right: var(--space-4);
   display: flex;
