@@ -33,7 +33,10 @@
   };
 
   // ==================== Initialization ====================
-  function init() {
+  async function init() {
+    if (typeof initPOIData === 'function') {
+      await initPOIData();
+    }
     loadData();
     initMap();
     renderMarkers();
@@ -241,12 +244,26 @@
 
   // ==================== Events ====================
   function bindEvents() {
-    let searchTimeout;
-    elements.searchInput.addEventListener('input', e => { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => handleSearch(e.target.value), 200); });
-    elements.searchInput.addEventListener('keydown', e => {
-      if (e.key === 'ArrowDown') { e.preventDefault(); navigateSearch(1); }
-      else if (e.key === 'ArrowUp') { e.preventDefault(); navigateSearch(-1); }
-      else if (e.key === 'Enter') { e.preventDefault(); selectSearchResult(state.searchResults[state.selectedSearchIndex]); }
+    elements.searchInput.addEventListener('input', (e) => handleSearch(e.target.value));
+    elements.searchDropdown.addEventListener('click', (e) => {
+      const item = e.target.closest('.search-result-item');
+      if (item) selectSearchResult(state.pois.find(p => p.id === item.dataset.id));
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') clearSearch();
+    });
+    
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'topico_pois' && e.newValue) {
+        state.pois = getPOIData();
+        renderMarkers();
+        updateCategoryCounts();
+      }
+    });
+    
+    elements.searchDropdown.addEventListener('keydown', e => {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') navigateSearch(e.key === 'ArrowDown' ? 1 : -1);
+      else if (e.key === 'Enter') selectSearchResult(state.selectedSearchIndex);
       else if (e.key === 'Escape') clearSearch();
     });
     $('#searchClear').addEventListener('click', clearSearch);
@@ -272,8 +289,15 @@
       const zl = $('#zoomLevel');
       if (zl) zl.textContent = `${Math.round(state.map.getZoom() * 100 / 19)}%`;
     });
-
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') state.selectedPOI = null; });
+    
+    document.addEventListener('keydown', e => { 
+      if (e.key === 'Escape') state.selectedPOI = null; 
+      if (e.key === 'r' || e.key === 'R') {
+        loadData();
+        renderMarkers();
+        updateCategoryCounts();
+      }
+    });
   }
 
   function navigateSearch(dir) {
@@ -286,4 +310,19 @@
 
   // Init
   document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', init) : init();
+  
+  // Polling for localStorage changes (works for same-tab and cross-tab)
+  let lastStoredHash = localStorage.getItem('topico_pois_hash');
+  console.log('Initial hash:', lastStoredHash);
+  setInterval(() => {
+    const hash = localStorage.getItem('topico_pois_hash');
+    console.log('Checking hash:', hash, 'vs', lastStoredHash);
+    if (hash !== lastStoredHash) {
+      console.log('Hash changed! Reloading markers...');
+      lastStoredHash = hash;
+      loadData();
+      renderMarkers();
+      updateCategoryCounts();
+    }
+  }, 2000);
 })();

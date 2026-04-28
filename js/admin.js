@@ -47,7 +47,10 @@
   };
 
   // ==================== Initialization ====================
-  function init() {
+  async function init() {
+    if (typeof initPOIData === 'function') {
+      await initPOIData();
+    }
     loadData();
     renderTable();
     bindEvents();
@@ -66,6 +69,9 @@
     if (typeof POI_DATA !== 'undefined') {
       POI_DATA.length = 0;
       POI_DATA.push(...state.pois);
+    }
+    if (typeof saveToStorage === 'function') {
+      saveToStorage();
     }
   }
 
@@ -90,7 +96,7 @@
         <td><span class="floor-badge">Piso ${poi.piso}</span></td>
         <td><span class="category-badge ${poi.categoria}">${state.categories[poi.categoria]?.label || poi.categoria}</span></td>
         <td class="truncate" style="max-width: 200px;">${poi.detalles || '-'}</td>
-        <td><code>${poi.coordenadas.x}, ${poi.coordenadas.y}</code></td>
+        <td><code>${poi.coordenadas.lat}, ${poi.coordenadas.lng}</code></td>
         <td>
           <button class="visibility-toggle ${poi.visible ? 'active' : ''}" data-id="${poi.id}" aria-label="Toggle visibility">
           </button>
@@ -155,8 +161,8 @@
     $('#poiPiso').value = poi?.piso || '';
     $('#poiCategoria').value = poi?.categoria || '';
     $('#poiDetalles').value = poi?.detalles || '';
-    $('#poiCoordX').value = poi?.coordenadas?.x || '';
-    $('#poiCoordY').value = poi?.coordenadas?.y || '';
+    $('#poiCoordX').value = poi?.coordenadas?.lat || '';
+    $('#poiCoordY').value = poi?.coordenadas?.lng || '';
     $('#poiVisible').checked = poi?.visible !== false;
     
     if (poi) {
@@ -207,8 +213,8 @@
       categoria: $('#poiCategoria').value,
       detalles: $('#poiDetalles').value.trim(),
       coordenadas: {
-        x: parseInt($('#poiCoordX').value),
-        y: parseInt($('#poiCoordY').value)
+        lat: parseFloat($('#poiCoordX').value),
+        lng: parseFloat($('#poiCoordY').value)
       },
       visible: $('#poiVisible').checked
     };
